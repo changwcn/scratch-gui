@@ -1,6 +1,6 @@
 import ScratchStorage from 'scratch-storage';
 
-import defaultProjectAssets from './default-project';
+import defaultProject from './default-project';
 
 /**
  * Wrapper for ScratchStorage which adds default web sources.
@@ -9,21 +9,18 @@ import defaultProjectAssets from './default-project';
 class Storage extends ScratchStorage {
     constructor () {
         super();
-        defaultProjectAssets.forEach(asset => this.cache(
-            this.AssetType[asset.assetType],
-            this.DataFormat[asset.dataFormat],
-            asset.data,
-            asset.id
-        ));
-        this.addWebSource(
+        this.cacheDefaultProject();
+        this.addWebStore(
             [this.AssetType.Project],
-            this.getProjectURL.bind(this)
+            this.getProjectGetConfig.bind(this),
+            this.getProjectCreateConfig.bind(this),
+            this.getProjectUpdateConfig.bind(this)
         );
-        this.addWebSource(
+        this.addWebStore(
             [this.AssetType.ImageVector, this.AssetType.ImageBitmap, this.AssetType.Sound],
-            this.getAssetURL.bind(this)
+            this.getAssetGetConfig.bind(this)
         );
-        this.addWebSource(
+        this.addWebStore(
             [this.AssetType.Sound],
             asset => `static/extension-assets/scratch3_music/${asset.assetId}.${asset.dataFormat}`
         );
@@ -31,14 +28,39 @@ class Storage extends ScratchStorage {
     setProjectHost (projectHost) {
         this.projectHost = projectHost;
     }
-    getProjectURL (projectAsset) {
+    getProjectGetConfig (projectAsset) {
         return `${this.projectHost}/internalapi/project/${projectAsset.assetId}/get/`;
+    }
+    getProjectCreateConfig () {
+        return {
+            url: `${this.projectHost}/`,
+            withCredentials: true
+        };
+    }
+    getProjectUpdateConfig (projectAsset) {
+        return {
+            url: `${this.projectHost}/${projectAsset.assetId}`,
+            withCredentials: true
+        };
     }
     setAssetHost (assetHost) {
         this.assetHost = assetHost;
     }
-    getAssetURL (asset) {
+    getAssetGetConfig (asset) {
         return `${this.assetHost}/internalapi/asset/${asset.assetId}.${asset.dataFormat}/get/`;
+    }
+    setTranslatorFunction (translator) {
+        this.translator = translator;
+        this.cacheDefaultProject();
+    }
+    cacheDefaultProject () {
+        const defaultProjectAssets = defaultProject(this.translator);
+        defaultProjectAssets.forEach(asset => this.cache(
+            this.AssetType[asset.assetType],
+            this.DataFormat[asset.dataFormat],
+            asset.data,
+            asset.id
+        ));
     }
 }
 

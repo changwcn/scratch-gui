@@ -132,8 +132,12 @@
     margin-left: 0.125rem;
 }
 
-/* only mirror blocks tab icon */
+/* mirror blocks and sound tab icons */
 [dir="rtl"] .tab:nth-of-type(1) img {
+    transform: scaleX(-1);
+}
+
+[dir="rtl"] .tab:nth-of-type(3) img {
     transform: scaleX(-1);
 }
 
@@ -273,4 +277,16 @@ $fade-out-distance: 15px;
 
 .extension-button > div {
     margin-top: 0;
+}
+
+/* Alerts */
+
+.alerts-container {
+    width: 448px;
+    z-index: $z-index-alerts;
+    left: 0;
+    right: 0;
+    margin: auto;
+    position: absolute;
+    margin-top: 53px;
 }

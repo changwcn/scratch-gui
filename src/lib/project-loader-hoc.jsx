@@ -1,5 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import {connect} from 'react-redux';
+import {injectIntl, intlShape} from 'react-intl';
+
+import {setProjectId} from '../reducers/project-id';
 
 import analytics from './analytics';
 import log from './log';
@@ -21,11 +25,14 @@ const ProjectLoaderHOC = function (WrappedComponent) {
             };
             storage.setProjectHost(props.projectHost);
             storage.setAssetHost(props.assetHost);
-
-        }
-        componentDidMount () {
-            if (this.props.projectId || this.props.projectId === 0) {
-                this.updateProject(this.props.projectId);
+            storage.setTranslatorFunction(props.intl.formatMessage);
+            props.setProjectId(props.projectId);
+            if (
+                props.projectId !== '' &&
+                props.projectId !== null &&
+                typeof props.projectId !== 'undefined'
+            ) {
+                this.updateProject(props.projectId);
             }
         }
         componentWillUpdate (nextProps) {
@@ -36,6 +43,7 @@ const ProjectLoaderHOC = function (WrappedComponent) {
                 storage.setAssetHost(nextProps.assetHost);
             }
             if (this.props.projectId !== nextProps.projectId) {
+                this.props.setProjectId(nextProps.projectId);
                 this.setState({fetchingProject: true}, () => {
                     this.updateProject(nextProps.projectId);
                 });
@@ -62,7 +70,12 @@ const ProjectLoaderHOC = function (WrappedComponent) {
         }
         render () {
             const {
-                projectId, // eslint-disable-line no-unused-vars
+                /* eslint-disable no-unused-vars */
+                assetHost,
+                projectHost,
+                projectId,
+                setProjectId: setProjectIdProp,
+                /* eslint-enable no-unused-vars */
                 ...componentProps
             } = this.props;
             if (!this.state.projectData) return null;
@@ -77,8 +90,10 @@ const ProjectLoaderHOC = function (WrappedComponent) {
     }
     ProjectLoaderComponent.propTypes = {
         assetHost: PropTypes.string,
+        intl: intlShape.isRequired,
         projectHost: PropTypes.string,
-        projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+        projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        setProjectId: PropTypes.func
     };
     ProjectLoaderComponent.defaultProps = {
         assetHost: 'https://assets.scratch.mit.edu',
@@ -86,7 +101,13 @@ const ProjectLoaderHOC = function (WrappedComponent) {
         projectId: 0
     };
 
-    return ProjectLoaderComponent;
+    const mapStateToProps = () => ({});
+
+    const mapDispatchToProps = dispatch => ({
+        setProjectId: id => dispatch(setProjectId(id))
+    });
+
+    return injectIntl(connect(mapStateToProps, mapDispatchToProps)(ProjectLoaderComponent));
 };
 
 export {
